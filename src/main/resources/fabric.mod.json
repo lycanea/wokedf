@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "wokedf",
+  "version": "${version}",
+  "name": "WokeDF",
+  "description": "add WOKE PRONOUNS to df (auto check players /profile)",
+  "authors": [{
+    "name": "Lycanea"
+  }
+  ],
+  "contact": {},
+  "license": "GPL-3.0",
+  "icon": "assets/wokedf/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "dev.lycanea.wokedf.client.WokedfClient"
+    ],
+    "main": [
+      "dev.lycanea.wokedf.Wokedf"
+    ]
+  },
+  "mixins": [
+    "wokedf.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}
