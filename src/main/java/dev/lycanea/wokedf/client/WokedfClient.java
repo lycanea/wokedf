@@ -5,6 +5,7 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.PlayerListEntry;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -12,6 +13,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -21,6 +27,7 @@ public class WokedfClient implements ClientModInitializer {
     public static final String MOD_ID = "wokedf";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
     public static final Map<String, String> userPronouns = new HashMap<>();
+    public static final Map<String, Instant> userJoined = new HashMap<>();
     private static final LinkedHashSet<String> queue = new LinkedHashSet<>();
     private int tickCounter = 0;
 
@@ -45,11 +52,17 @@ public class WokedfClient implements ClientModInitializer {
                     String pronouns = matcher.group(2);
                     String joined = matcher.group(3);
 
-                    if (!userPronouns.containsKey(username)) {
-                        userPronouns.put(username, pronouns);
-                        return false;
-                    }
+                    DateTimeFormatter formatter =
+                            DateTimeFormatter.ofPattern("MMM dd, yyyy", Locale.ENGLISH);
+
+                    LocalDate date = LocalDate.parse(joined, formatter);
+                    Instant joinInstant = date.atStartOfDay(ZoneOffset.UTC).toInstant();
+
+                    boolean bwa = userPronouns.containsKey(username) && userJoined.containsKey(username);
+
                     userPronouns.put(username, pronouns);
+                    userJoined.put(username, joinInstant);
+                    return bwa;
                 }
             }
             return true;
@@ -61,7 +74,7 @@ public class WokedfClient implements ClientModInitializer {
             if (onDF() && MinecraftClient.getInstance().player != null) {
                 String username = queue.removeFirst();
                 // double check that its not already processed for some reason idk lmao just incase
-                if (userPronouns.containsKey(username)) return;
+                if (userPronouns.containsKey(username) && userJoined.containsKey(username)) return;
                 if (!(MinecraftClient.getInstance().world == null)) {
                     MinecraftClient.getInstance().execute(() -> MinecraftClient.getInstance().player.networkHandler.sendChatCommand("profile " + username));
                 }
@@ -88,15 +101,42 @@ public class WokedfClient implements ClientModInitializer {
         return null;
     }
 
+    public static Instant getUserJoinDate(String username) {
+        if (onDF()) {
+            Instant value = userJoined.get(username);
+            if (value != null) {
+                return value;
+            }
+
+            queue.add(username);
+        }
+        return null;
+    }
+
     public static Text updatePlayerlistEntry(PlayerListEntry entry, CallbackInfoReturnable<Text> cir) {
+        MutableText returnValue = cir.getReturnValue().copy();
         if (onDF()) {
             String pronouns = getUserPronouns(entry.getProfile().getName());
+            Instant joinDate = getUserJoinDate(entry.getProfile().getName());
+
+            if (joinDate != null) {
+                Instant now = Instant.now();
+                long daysSince = Duration.between(joinDate, now).toDays();
+                if (daysSince < 30) {
+                    Formatting color = Formatting.YELLOW;
+                    if (daysSince <= 14) color = Formatting.GOLD;
+                    if (daysSince <= 3) color = Formatting.RED;
+                    Text newIcon = Text.literal( " ℹ " + daysSince)
+                            .setStyle(Style.EMPTY.withColor(color));
+                    returnValue.append(newIcon);
+                }
+            }
             if (pronouns != null) {
                 Text added = Text.literal(" (" + pronouns + ")")
                         .setStyle(Style.EMPTY.withItalic(true).withColor(Formatting.GRAY));
-                return cir.getReturnValue().copy().append(added);
+                returnValue.append(added);
             }
         }
-        return cir.getReturnValue();
+        return returnValue;
     }
 }
