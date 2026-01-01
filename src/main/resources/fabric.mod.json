@@ -16,8 +16,8 @@
     "client": [
       "dev.lycanea.wokedf.client.WokedfClient"
     ],
-    "main": [
-      "dev.lycanea.wokedf.Wokedf"
+    "modmenu": [
+      "dev.lycanea.wokedf.ModMenu"
     ]
   },
   "mixins": [

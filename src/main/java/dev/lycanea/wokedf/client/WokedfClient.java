@@ -1,5 +1,6 @@
 package dev.lycanea.wokedf.client;
 
+import dev.lycanea.wokedf.Config;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
@@ -33,6 +34,7 @@ public class WokedfClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        Config.HANDLER.load();
         ClientTickEvents.END_CLIENT_TICK.register((MinecraftClient client) -> {
             tickCounter++;
             if (tickCounter >= 20) {
@@ -119,7 +121,7 @@ public class WokedfClient implements ClientModInitializer {
             String pronouns = getUserPronouns(entry.getProfile().getName());
             Instant joinDate = getUserJoinDate(entry.getProfile().getName());
 
-            if (joinDate != null) {
+            if (joinDate != null && Config.HANDLER.instance().playerListJoinBadge) {
                 Instant now = Instant.now();
                 long daysSince = Duration.between(joinDate, now).toDays();
                 if (daysSince < 30) {
@@ -131,7 +133,7 @@ public class WokedfClient implements ClientModInitializer {
                     returnValue.append(newIcon);
                 }
             }
-            if (pronouns != null) {
+            if (pronouns != null && Config.HANDLER.instance().playerListPronouns) {
                 Text added = Text.literal(" (" + pronouns + ")")
                         .setStyle(Style.EMPTY.withItalic(true).withColor(Formatting.GRAY));
                 returnValue.append(added);

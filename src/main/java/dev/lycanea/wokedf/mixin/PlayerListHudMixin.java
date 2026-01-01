@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(PlayerListHud.class)
-public class tablist {
+public class PlayerListHudMixin {
     @Inject(method = "getPlayerName", at = @At(value = "RETURN"), cancellable = true)
     private void changeTablistName(PlayerListEntry entry, CallbackInfoReturnable<Text> cir) {
         cir.setReturnValue(WokedfClient.updatePlayerlistEntry(entry, cir));

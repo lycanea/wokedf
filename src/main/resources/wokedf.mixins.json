@@ -6,7 +6,7 @@
   "mixins": [
   ],
   "client": [
-    "tablist"
+    "PlayerListHudMixin"
   ],
   "injectors": {
     "defaultRequire": 1
