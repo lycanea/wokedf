@@ -37,8 +37,13 @@ public class WokedfClient implements ClientModInitializer {
         Config.HANDLER.load();
         ClientTickEvents.END_CLIENT_TICK.register((MinecraftClient client) -> {
             tickCounter++;
-            if (tickCounter >= 20) {
+            if (onDF() && tickCounter >= 20 && MinecraftClient.getInstance().player != null) {
                 tickCounter = 0;
+                for (PlayerListEntry entry : MinecraftClient.getInstance().player.networkHandler.getPlayerList()) {
+                    getUserPronouns(entry.getProfile().getName());
+                    getUserJoinDate(entry.getProfile().getName());
+                }
+                LOGGER.info(String.valueOf(queue));
                 processQueue();
             }
         });
@@ -98,7 +103,9 @@ public class WokedfClient implements ClientModInitializer {
                 return value;
             }
 
-            queue.add(username);
+            if (!userPronouns.containsKey(username)) {
+                queue.add(username);
+            }
         }
         return null;
     }
