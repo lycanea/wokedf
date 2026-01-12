@@ -43,7 +43,6 @@ public class WokedfClient implements ClientModInitializer {
                     getUserPronouns(entry.getProfile().getName());
                     getUserJoinDate(entry.getProfile().getName());
                 }
-                LOGGER.info(String.valueOf(queue));
                 processQueue();
             }
         });
